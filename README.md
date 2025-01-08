@@ -39,3 +39,7 @@ SymbolQuizView(
 1. `Space` -> start / stop path animation
 2. `Cmd` + `u` -> show incorrect mark(❌)
 3. `Cmd` + `c` -> show correct mark(⭕️)
+
+### Font
+This project depends on [Hefty Reward Single Line Font](https://www.fontspace.com/hefty-reward-single-line-font-f97212).  
+This font is allowed only for personal use, not for any commercial use.
