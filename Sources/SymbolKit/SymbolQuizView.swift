@@ -48,16 +48,16 @@ public struct SymbolQuizView<Content: View>: View {
     }
 
     public var body: some View {
-        VStack(alignment: .center, spacing: 20) {
+        VStack(alignment: .center, spacing: 0) {
             titleContent
                 .padding()
-                .frame(height: 120)
+                .frame(height: 100)
             ZStack {
                 Group {
                     if shouldShowAnswer {
                         StrokeAnimationShapeView(
                             shape: shape,
-                            lineWidth: 10,
+                            lineWidth: 5,
                             lineColor: .white,
                             duration: answerDrawingDuration,
                             isPaused: false,
@@ -66,7 +66,7 @@ public struct SymbolQuizView<Content: View>: View {
                     } else {
                         StrokeAnimationShapeView(
                             shape: shape,
-                            lineWidth: 10,
+                            lineWidth: 5,
                             lineColor: .white,
                             duration: questionDrawingDuration,
                             isPaused: isPaused,
@@ -74,21 +74,29 @@ public struct SymbolQuizView<Content: View>: View {
                         )
                     }
                 }
+                .frame(maxHeight: .infinity, alignment: .center)
                 .aspectRatio(shapeAspectRatio, contentMode: .fit)
-                Image(systemName: "circle")
+                Image(systemName: "checkmark")
                     .resizable()
-                    .frame(width: 500, height: 500)
-                    .foregroundStyle(.red)
+                    .frame(width: 320, height: 320)
+                    .foregroundStyle(.green)
                     .shadow(radius: 10)
                     .opacity(shouldShowCorrectMark ? 1 : 0)
                 Image(systemName: "xmark")
                     .resizable()
-                    .frame(width: 500, height: 500)
-                    .foregroundStyle(.blue)
+                    .frame(width: 320, height: 320)
                     .shadow(radius: 10)
                     .opacity(shouldShowNotCorrectMark ? 1 : 0)
             }
-            HStack(spacing: 50) {
+            HStack(spacing: 24) {
+                Button {
+                    isPaused.toggle()
+                } label: {
+                    Image(systemName: "arrow.trianglehead.counterclockwise")
+                        .resizable()
+                        .padding(20)
+                        .frame(width: 120, height: 120)
+                }
                 Button {
                     isPaused.toggle()
                 } label: {
@@ -97,7 +105,7 @@ public struct SymbolQuizView<Content: View>: View {
                         .padding(20)
                         .frame(width: 120, height: 120)
                 }
-                VStack {
+                VStack(spacing: 0) {
                     Button {
                         shouldShowAnswer.toggle()
                         shouldShowCorrectMark = false
@@ -112,14 +120,13 @@ public struct SymbolQuizView<Content: View>: View {
                         showAnswerContent
                             .minimumScaleFactor(0.1)
                             .padding()
-                            .frame(height: 120)
                     }
 #if os(iOS)
                     HStack(spacing: 32) {
-                        Image(systemName: "circle")
+                        Image(systemName: "checkmark")
                             .resizable()
                             .frame(width: 48, height: 48)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(.green)
                             .shadow(radius: 10)
                             .onTapGesture {
                                 showCorrectAnswer()
@@ -127,7 +134,7 @@ public struct SymbolQuizView<Content: View>: View {
                         Image(systemName: "xmark")
                             .resizable()
                             .frame(width: 48, height: 48)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(.red)
                             .shadow(radius: 10)
                             .onTapGesture {
                                 showInCorrectAnswer()
@@ -135,28 +142,30 @@ public struct SymbolQuizView<Content: View>: View {
                     }
 #endif
                 }
-                Spacer()
-                if !shouldShowAnswerName {
-                    answerHintContent
-                        .minimumScaleFactor(0.1)
+                Group {
+                    if !shouldShowAnswerName {
+                        answerHintContent
+                            .minimumScaleFactor(0.1)
+                    } else {
+                        HStack(spacing: 4) {
+                            answerPrefixContent
+                                .minimumScaleFactor(0.1)
+                                .padding()
+                            answerContent
+                                .minimumScaleFactor(0.1)
+                                .padding()
+                        }
+                        .opacity(shouldShowAnswerName ? 1 : 0)
+                    }
                 }
-                HStack(spacing: 4) {
-                    answerPrefixContent
-                        .minimumScaleFactor(0.1)
-                        .padding()
-                        .frame(height: 120)
-                    answerContent
-                        .minimumScaleFactor(0.1)
-                        .padding()
-                        .frame(height: 120)
-                }
-                .opacity(shouldShowAnswerName ? 1 : 0)
-
-
+                .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 40)
+            .padding(.vertical, 20)
+            .scaledToFit()
         }
         .padding(28)
+        .ignoresSafeArea()
         .frame(maxWidth: .infinity)
         .focusable()
         .focused($isFocused)
@@ -182,6 +191,7 @@ public struct SymbolQuizView<Content: View>: View {
 
 private extension SymbolQuizView {
     func showCorrectAnswer() {
+        shouldShowNotCorrectMark = false
         withAnimation(.easeInOut) {
             shouldShowCorrectMark = true
         } completion: {
@@ -195,6 +205,7 @@ private extension SymbolQuizView {
     }
 
     func showInCorrectAnswer() {
+        shouldShowCorrectMark = false
         withAnimation(.easeInOut) {
             shouldShowNotCorrectMark = true
         } completion: {
@@ -206,4 +217,38 @@ private extension SymbolQuizView {
             }
         }
     }
+}
+
+#Preview {
+    SymbolQuizView(
+        titleContent: {
+            Text("Title")
+                .lineLimit(1)
+                .font(.system(size: 100, weight: .bold))
+                .foregroundStyle(.blue)
+        }, answerPrefixContent: {
+            Text("Answer: ")
+                .lineLimit(1)
+                .font(.system(size: 80, weight: .bold))
+                .foregroundStyle(.gray)
+        }, answerContent: {
+            Text("Sugiy")
+                .lineLimit(1)
+                .font(.system(size: 100, weight: .bold))
+                .foregroundStyle(.white)
+        }, showAnswerContent: {
+            Text("Show Answer")
+                .lineLimit(1)
+                .font(.system(size: 100, weight: .bold))
+                .foregroundStyle(.white)
+        }, answerHintContent: {
+            Text("someone's icon" ?? "")
+                .lineLimit(2)
+                .font(.system(size: 80, weight: .bold))
+                .foregroundStyle(.white)
+        },
+        shape: SugiyShape(),
+        shapeAspectRatio: SugiyShape.aspectRatio
+    )
+    .background(Color.gray)
 }

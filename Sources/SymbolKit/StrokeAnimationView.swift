@@ -78,3 +78,13 @@ public struct StrokeAnimationShapeView: View {
         }
     }
 }
+
+
+#Preview {
+    StrokeAnimationShapeView(
+        shape: SugiyShape(),
+        lineWidth: 4,
+        shapeAspectRatio: SugiyShape.aspectRatio
+    )
+    .background(.white)
+}
