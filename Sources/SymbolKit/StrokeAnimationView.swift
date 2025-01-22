@@ -34,8 +34,8 @@ public struct StrokeAnimationShapeView: View {
     let shape: any Shape
     let isPaused: Bool
     let shapeAspectRatio: CGFloat
-    @State private var animationProgress: CGFloat = 0
     @State private var lastFrameDate: Date?
+    @State private var viewModel: StrokeAnimationViewModel
 
     public init(
         shape: any Shape,
@@ -43,7 +43,8 @@ public struct StrokeAnimationShapeView: View {
         lineColor: Color = .black,
         duration: Duration = .seconds(10),
         isPaused: Bool = false,
-        shapeAspectRatio: CGFloat = 1
+        shapeAspectRatio: CGFloat = 1,
+        viewModel: StrokeAnimationViewModel = .init()
     ) {
         self.lineWidth = lineWidth
         self.lineColor = lineColor
@@ -51,13 +52,14 @@ public struct StrokeAnimationShapeView: View {
         self.isPaused = isPaused
         self.shape = shape
         self.shapeAspectRatio = shapeAspectRatio
+        self.viewModel = viewModel
     }
 
     public var body: some View {
         TimelineView(.animation(paused: isPaused)) { context in
             GeometryReader { geometry in
                 StrokeAnimatableShape(
-                    animationProgress: animationProgress,
+                    animationProgress: viewModel.animationProgress,
                     shape: shape
                 )
                     .stroke(lineColor, lineWidth: lineWidth)
@@ -68,7 +70,10 @@ public struct StrokeAnimationShapeView: View {
                             lastFrameDate = newValue
                         } else {
                             let deltaTime = newValue.timeIntervalSince(oldValue)
-                            animationProgress += deltaTime / CGFloat(duration.components.seconds)
+                            viewModel.updateProgress(
+                                progress: viewModel.animationProgress
+                                + deltaTime / CGFloat(duration.components.seconds)
+                            )
                         }
                     }
                     .onChange(of: isPaused) { oldValue, newValue in

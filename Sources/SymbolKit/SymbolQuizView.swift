@@ -24,6 +24,7 @@ public struct SymbolQuizView<Content: View>: View {
     @State private var shouldShowAnswer = false
     @State private var shouldShowAnswerName = false
     @FocusState private var isFocused: Bool
+    @State private var strokeAnimationViewModel = StrokeAnimationViewModel()
 
     public init(
         @ViewBuilder titleContent: () -> Content,
@@ -70,7 +71,8 @@ public struct SymbolQuizView<Content: View>: View {
                             lineColor: .white,
                             duration: questionDrawingDuration,
                             isPaused: isPaused,
-                            shapeAspectRatio: shapeAspectRatio
+                            shapeAspectRatio: shapeAspectRatio,
+                            viewModel: strokeAnimationViewModel
                         )
                     }
                 }
@@ -90,7 +92,8 @@ public struct SymbolQuizView<Content: View>: View {
             }
             HStack(spacing: 24) {
                 Button {
-                    isPaused.toggle()
+                    strokeAnimationViewModel.resetProgress()
+                    isPaused = true
                 } label: {
                     Image(systemName: "arrow.trianglehead.counterclockwise")
                         .resizable()
