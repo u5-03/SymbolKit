@@ -12,15 +12,34 @@ import Observation
 public class StrokeAnimationViewModel {
 
     private(set) var animationProgress: CGFloat = 0
+    private(set) var fromAnimationProgress: CGFloat = 0
+    private(set) var toAnimationProgress: CGFloat = 0
+    let animationType: PathAnimationType
 
-    public init() {
+    public init(animationType: PathAnimationType = .progressiveDraw) {
+        self.animationType = animationType
+        if case let .fixedRatioMove(strokeLengthRatio) = animationType {
+            fromAnimationProgress = -strokeLengthRatio
+        }
     }
 
-    func updateProgress(progress: CGFloat) {
-        animationProgress = progress
+    func addProgress(progress: CGFloat) {
+        switch animationType {
+        case .progressiveDraw:
+            animationProgress += progress
+        case .fixedRatioMove:
+            fromAnimationProgress += progress
+            toAnimationProgress += progress
+        }
     }
 
     func resetProgress() {
-        animationProgress = 0
+        switch animationType {
+        case .progressiveDraw:
+            animationProgress = 0
+        case .fixedRatioMove(let strokeLengthRatio):
+            fromAnimationProgress = -strokeLengthRatio
+            toAnimationProgress = 0
+        }
     }
 }

@@ -7,24 +7,9 @@
 
 import SwiftUI
 
-public struct StrokeAnimatableShape {
-    var animationProgress: CGFloat = 0
-    let shape: any Shape
-}
-
-extension StrokeAnimatableShape: Shape {
-    public var animatableData: CGFloat {
-        get { animationProgress }
-        set {
-            if animationProgress >= 1.0 { return }
-            animationProgress = newValue
-        }
-    }
-
-    public func path(in rect: CGRect) -> Path {
-        return shape.path(in: rect)
-            .trimmedPath(from: 0, to: animationProgress)
-    }
+public enum PathAnimationType {
+    case progressiveDraw
+    case fixedRatioMove(strokeLengthRatio: CGFloat)
 }
 
 public struct StrokeAnimationShapeView: View {
@@ -58,11 +43,23 @@ public struct StrokeAnimationShapeView: View {
     public var body: some View {
         TimelineView(.animation(paused: isPaused)) { context in
             GeometryReader { geometry in
-                StrokeAnimatableShape(
-                    animationProgress: viewModel.animationProgress,
-                    shape: shape
-                )
-                    .stroke(lineColor, lineWidth: lineWidth)
+                Group {
+                    switch viewModel.animationType {
+                    case .progressiveDraw:
+                        StrokeAnimatableShape(
+                            animationProgress: viewModel.animationProgress,
+                            shape: shape
+                        )
+                        .stroke(lineColor, lineWidth: lineWidth)
+                    case .fixedRatioMove:
+                        PathAnimatableShape(
+                            fromAnimationProgress: viewModel.fromAnimationProgress,
+                            toAnimationProgress: viewModel.toAnimationProgress,
+                            shape: shape
+                        )
+                        .stroke(lineColor, lineWidth: lineWidth)
+                    }
+                }
                     .aspectRatio(shapeAspectRatio, contentMode: .fit)
                     .frame(width: geometry.size.width, alignment: .center)
                     .onChange(of: context.date) { oldValue, newValue in
@@ -70,9 +67,8 @@ public struct StrokeAnimationShapeView: View {
                             lastFrameDate = newValue
                         } else {
                             let deltaTime = newValue.timeIntervalSince(oldValue)
-                            viewModel.updateProgress(
-                                progress: viewModel.animationProgress
-                                + deltaTime / CGFloat(duration.components.seconds)
+                            viewModel.addProgress(
+                                progress: deltaTime / CGFloat(duration.components.seconds)
                             )
                         }
                     }
@@ -89,7 +85,8 @@ public struct StrokeAnimationShapeView: View {
     StrokeAnimationShapeView(
         shape: SugiyShape(),
         lineWidth: 4,
-        shapeAspectRatio: SugiyShape.aspectRatio
+        shapeAspectRatio: SugiyShape.aspectRatio,
+        viewModel: .init(animationType: .fixedRatioMove(strokeLengthRatio: 0.05))
     )
     .background(.white)
 }

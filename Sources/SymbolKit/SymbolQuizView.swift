@@ -23,8 +23,9 @@ public struct SymbolQuizView<Content: View>: View {
     @State private var shouldShowNotCorrectMark = false
     @State private var shouldShowAnswer = false
     @State private var shouldShowAnswerName = false
+    @State private var showAnswerTask: Task<Void, Never>?
     @FocusState private var isFocused: Bool
-    @State private var strokeAnimationViewModel = StrokeAnimationViewModel()
+    @State private var strokeAnimationViewModel = StrokeAnimationViewModel(animationType: .fixedRatioMove(strokeLengthRatio: 0.05))
 
     public init(
         @ViewBuilder titleContent: () -> Content,
@@ -94,6 +95,8 @@ public struct SymbolQuizView<Content: View>: View {
                 Button {
                     strokeAnimationViewModel.resetProgress()
                     isPaused = true
+                    shouldShowAnswer = false
+                    showAnswerTask?.cancel()
                 } label: {
                     Image(systemName: "arrow.trianglehead.counterclockwise")
                         .resizable()
@@ -113,12 +116,13 @@ public struct SymbolQuizView<Content: View>: View {
                         shouldShowAnswer.toggle()
                         shouldShowCorrectMark = false
                         shouldShowNotCorrectMark = false
-                        Task {
+                        showAnswerTask = Task {
                             try? await Task.sleep(for: answerDrawingDuration)
                             withAnimation(.easeInOut) {
                                 shouldShowAnswerName = true
                             }
                         }
+
                     } label: {
                         showAnswerContent
                             .minimumScaleFactor(0.1)
