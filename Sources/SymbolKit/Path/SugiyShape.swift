@@ -10,6 +10,8 @@ import SwiftUI
 public struct SugiyShape: Shape {
     public static let aspectRatio: CGFloat = 976 / 648
 
+    public init() {}
+
     public func path(in rect: CGRect) -> Path {
         var path = Path()
         let width = rect.size.width
