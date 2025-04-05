@@ -7,14 +7,16 @@
 
 import SwiftUI
 
-public struct SymbolQuizView<Content: View>: View {
-    let titleContent: Content
-    let answerPrefixContent: Content
-    let answerContent: Content
-    let showAnswerContent: Content
-    let answerHintContent: Content
+public struct SymbolQuizView<TextContent: View>: View {
+    let titleContent: TextContent
+    let answerPrefixContent: TextContent
+    let answerContent: TextContent
+    let showAnswerContent: TextContent
+    let answerHintContent: TextContent
+    let answerAlternativeContent: AnyView?
     let shape: any Shape
     let shapeAspectRatio: CGFloat
+    let lineWidth: CGFloat
     let questionDrawingDuration: Duration
     let answerDrawingDuration: Duration
 
@@ -28,13 +30,15 @@ public struct SymbolQuizView<Content: View>: View {
     @State private var strokeAnimationViewModel: StrokeAnimationViewModel
 
     public init(
-        @ViewBuilder titleContent: () -> Content,
-        @ViewBuilder answerPrefixContent: () -> Content,
-        @ViewBuilder answerContent: () -> Content,
-        @ViewBuilder showAnswerContent: () -> Content,
-        @ViewBuilder answerHintContent: (() -> Content),
+        @ViewBuilder titleContent: () -> TextContent,
+        @ViewBuilder answerPrefixContent: () -> TextContent,
+        @ViewBuilder answerContent: () -> TextContent,
+        @ViewBuilder showAnswerContent: () -> TextContent,
+        @ViewBuilder answerHintContent: (() -> TextContent),
+        answerAlternativeContent: AnyView? = nil,
         shape: any Shape,
         shapeAspectRatio: CGFloat = 1,
+        lineWidth: CGFloat = 5,
         questionDrawingDuration: Duration = .seconds(60),
         answerDrawingDuration: Duration = .seconds(5),
         pathAnimationType: PathAnimationType = .progressiveDraw
@@ -44,11 +48,13 @@ public struct SymbolQuizView<Content: View>: View {
         self.answerContent = answerContent()
         self.showAnswerContent = showAnswerContent()
         self.answerHintContent = answerHintContent()
+        self.answerAlternativeContent = answerAlternativeContent
         self.shape = shape
         self.shapeAspectRatio = shapeAspectRatio
+        self.lineWidth = lineWidth
         self.questionDrawingDuration = questionDrawingDuration
         self.answerDrawingDuration = answerDrawingDuration
-        strokeAnimationViewModel = .init(animationType:             pathAnimationType)
+        strokeAnimationViewModel = .init(animationType: pathAnimationType)
     }
 
     public var body: some View {
@@ -60,7 +66,9 @@ public struct SymbolQuizView<Content: View>: View {
                     .frame(height: proxy.size.height * 0.15)
                 ZStack {
                     Group {
-                        if shouldShowAnswer {
+                        if shouldShowAnswerName, let answerAlternativeContent {
+                            answerAlternativeContent
+                        } else if shouldShowAnswer {
                             StrokeAnimationShapeView(
                                 shape: shape,
                                 lineWidth: 5,
@@ -72,7 +80,7 @@ public struct SymbolQuizView<Content: View>: View {
                         } else {
                             StrokeAnimationShapeView(
                                 shape: shape,
-                                lineWidth: 5,
+                                lineWidth: lineWidth,
                                 lineColor: .white,
                                 duration: questionDrawingDuration,
                                 isPaused: isPaused,
@@ -103,6 +111,7 @@ public struct SymbolQuizView<Content: View>: View {
             }
             .focusable()
             .focused($isFocused)
+            .focusEffectDisabled()
 #if os(macOS)
             .onKeyPress(.space) {
                 isPaused.toggle()
@@ -179,6 +188,7 @@ private extension SymbolQuizView {
             strokeAnimationViewModel.resetProgress()
             isPaused = true
             shouldShowAnswer = false
+            shouldShowAnswerName = false
             showAnswerTask?.cancel()
         } label: {
             Image(systemName: "arrow.trianglehead.counterclockwise")
@@ -287,7 +297,11 @@ private extension SymbolQuizView {
                 .lineLimit(2)
                 .font(.system(size: 80, weight: .bold))
                 .foregroundStyle(.white)
-        },
+        }, answerAlternativeContent: AnyView(
+            SugiyShape()
+                .stroke(.yellow)
+                .aspectRatio(SugiyShape.aspectRatio, contentMode: .fit)
+        ),
         shape: SugiyShape(),
         shapeAspectRatio: SugiyShape.aspectRatio
     )
@@ -321,7 +335,11 @@ private extension SymbolQuizView {
                 .lineLimit(2)
                 .font(.system(size: 80, weight: .bold))
                 .foregroundStyle(.white)
-        },
+        }, answerAlternativeContent: AnyView(
+            SugiyShape()
+                .stroke(.yellow)
+                .aspectRatio(SugiyShape.aspectRatio, contentMode: .fit)
+        ),
         shape: SugiyShape(),
         shapeAspectRatio: SugiyShape.aspectRatio
     )
